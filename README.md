@@ -17,18 +17,25 @@ Pretend Claude Code is working hard in your terminal. Inspired by [genact](https
 
 ## Install
 
-### From Release (recommended)
+### Download binary (recommended, no Node.js needed)
 
-Download the latest release from the [Releases page](https://github.com/hawkeye-xb/fake-claude/releases), then:
+Download the standalone binary for your platform from the [Releases page](https://github.com/hawkeye-xb/fake-claude/releases):
+
+| Platform | File |
+|---|---|
+| macOS Apple Silicon | `fake-claude-darwin-arm64.gz` |
+| macOS Intel | `fake-claude-darwin-x64.gz` |
+| Linux x86_64 | `fake-claude-linux-x64.gz` |
+| Linux ARM64 | `fake-claude-linux-arm64.gz` |
 
 ```bash
-# Unpack and run
-tar -xzf fake-claude-v*.tar.gz
-cd fake-claude
-node bin/fake-claude.js
+# Example: macOS Apple Silicon
+gunzip fake-claude-darwin-arm64.gz
+chmod +x fake-claude-darwin-arm64
+./fake-claude-darwin-arm64
 ```
 
-### Build from source
+### Build from source (requires Node.js)
 
 ```bash
 git clone https://github.com/hawkeye-xb/fake-claude.git
@@ -95,17 +102,26 @@ Press `Ctrl+C` to exit gracefully (shows session stats).
 
 ## Build for Release
 
+Requires [bun](https://bun.sh) for standalone binary compilation:
+
 ```bash
-npm run build
-tar -czf fake-claude-v1.0.0.tar.gz \
-  bin/ dist/ package.json README.md LICENSE
+npm run release
+# Outputs to release/ directory:
+#   fake-claude-darwin-arm64.gz   (macOS Apple Silicon)
+#   fake-claude-darwin-x64.gz     (macOS Intel)
+#   fake-claude-linux-x64.gz      (Linux x86_64)
+#   fake-claude-linux-arm64.gz    (Linux ARM64)
+#   fake-claude-v1.0.0-source.tar.gz (Node.js source)
 ```
+
+Then upload the files from `release/` to GitHub Releases.
 
 ## Tech Stack
 
 - TypeScript (ES2022, Node16 modules)
 - Pure ANSI escape codes, no UI framework
 - Zero runtime dependencies
+- Standalone binaries via bun compile
 
 ## License
 
