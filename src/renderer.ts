@@ -4,12 +4,13 @@ import * as out from './output.js';
 import { sleep, sleepRange, pick, randInt } from './timing.js';
 import { SPINNER_CHARS, SPINNER_VERBS } from './data/verbs.js';
 
-// Real Claude Code uses "  ⎿  " (2 spaces, ⎿, 2 spaces) as the connector
-// between tool header and tool result. dimColor applied.
-const CONNECTOR = out.C.dimmed('  ⎿  ');
-const CONNECTOR_NESTED = out.C.dimmed('     ⎿ ');
-const CONTENT_INDENT = '       '; // 7 spaces — aligns with content after "  ⎿  "
-const TOOL_INDENT = '  '; // 2 spaces before ⏺
+// Real Claude Code indentation (from source):
+// ⏺ ToolName(arg)          col 0  — tool header, NO indent
+//   ⎿  result summary       col 2  — connector: 2 spaces + ⎿ + 2 spaces
+//       content line         col 6  — content: 6 spaces
+//       … +N lines          col 6
+const CONNECTOR = out.C.dimmed('  ⎿  ');     // "  ⎿  " at col 2
+const CONTENT_INDENT = '      ';              // 6 spaces for content
 
 // --- Thinking Spinner ---
 
@@ -44,9 +45,9 @@ export function toolHeader(toolName: string, detail?: string): void {
   const dot = out.C.toolDot('⏺');
   const name = out.C.toolName(toolName);
   if (detail) {
-    out.writeLine(`${TOOL_INDENT}${dot} ${name}(${detail})`);
+    out.writeLine(`${dot} ${name}(${detail})`);
   } else {
-    out.writeLine(`${TOOL_INDENT}${dot} ${name}`);
+    out.writeLine(`${dot} ${name}`);
   }
 }
 
@@ -145,7 +146,6 @@ export async function newFileBlock(lines: string[], signal: AbortSignal): Promis
 // --- Permission Prompt ---
 
 export async function permissionPrompt(command: string, signal: AbortSignal): Promise<void> {
-  // Real format: tool header then numbered options
   toolHeader('Claude wants to run:', out.C.dimmed(command));
 
   out.newLine();
@@ -164,7 +164,8 @@ export async function permissionPrompt(command: string, signal: AbortSignal): Pr
 // --- Prose Response (character-by-character typing) ---
 
 export async function proseResponse(text: string, signal: AbortSignal): Promise<void> {
-  out.write(TOOL_INDENT);
+  // Real CC: prose starts with ⏺ at col 0, continuation lines at col 2
+  out.write(`${out.C.toolDot('⏺')} `);
   for (let i = 0; i < text.length; i++) {
     if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
 
@@ -172,7 +173,7 @@ export async function proseResponse(text: string, signal: AbortSignal): Promise<
     out.write(char);
 
     if (char === '\n' && i < text.length - 1) {
-      out.write(TOOL_INDENT);
+      out.write('  '); // continuation indent at col 2
     }
 
     if (char === '.' || char === '!' || char === '?') {
@@ -213,7 +214,7 @@ export async function searchResults(
 
 export function collapsedSummary(parts: string[]): void {
   const text = parts.join(', ');
-  out.writeLine(`${TOOL_INDENT}${out.C.dimmed(text)}`);
+  out.writeLine(`  ${out.C.dimmed(text)}`);
 }
 
 // --- Session Stats ---
@@ -246,7 +247,7 @@ export function sessionStats(stats: SessionStats): void {
 
 export async function userPrompt(text: string, signal: AbortSignal): Promise<void> {
   out.newLine();
-  out.write(out.C.keyword('❯') + ' ');
+  out.write(out.C.keyword('❯') + ' '); // ❯ at col 0
 
   for (const char of text) {
     if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
