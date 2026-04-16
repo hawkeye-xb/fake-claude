@@ -1,0 +1,36 @@
+{
+  "name": "fake-claude",
+  "version": "1.0.0",
+  "description": "Pretend Claude Code is working hard in your terminal",
+  "type": "module",
+  "bin": {
+    "fake-claude": "./bin/fake-claude.js"
+  },
+  "files": [
+    "bin/",
+    "dist/"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node bin/fake-claude.js",
+    "dev": "tsc && node bin/fake-claude.js",
+    "release": "tsc && tar -czf fake-claude-v$npm_package_version.tar.gz bin/ dist/ package.json README.md LICENSE"
+  },
+  "keywords": [
+    "cli",
+    "terminal",
+    "fake",
+    "claude",
+    "genact"
+  ],
+  "author": "hawkeye-xb",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hawkeye-xb/fake-claude.git"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^5.4.0"
+  }
+}
