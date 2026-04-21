@@ -37,6 +37,7 @@ export async function thinkingSpinner(durationMs: number, signal: AbortSignal): 
   }
 
   out.clearLine();
+  await out.flush();
 }
 
 // --- Tool Header: ⏺ ToolName(detail) ---
@@ -93,6 +94,7 @@ export async function contentBlock(
   if (extra > 0) {
     out.writeLine(`${CONTENT_INDENT}${out.C.dimmed(`… +${extra} lines (ctrl+o to expand)`)}`);
   }
+  await out.flush();
 }
 
 // --- Diff Block with line numbers ---
@@ -128,6 +130,7 @@ export async function diffBlock(
     out.writeLine(formatted);
     await sleepRange(50, 100, signal);
   }
+  await out.flush();
 }
 
 // --- New file (all additions) ---
@@ -141,6 +144,7 @@ export async function newFileBlock(lines: string[], signal: AbortSignal): Promis
     out.writeLine(`${CONTENT_INDENT}${out.C.diffAdd('+ ' + num + '  ' + lines[i])}`);
     await sleepRange(40, 80, signal);
   }
+  await out.flush();
 }
 
 // --- Permission Prompt ---
@@ -190,6 +194,7 @@ export async function proseResponse(text: string, signal: AbortSignal): Promise<
   }
   out.newLine();
   out.newLine();
+  await out.flush();
 }
 
 // --- Search Results ---
@@ -207,6 +212,7 @@ export async function searchResults(
   }
   out.newLine();
   out.writeLine(`${CONTENT_INDENT}${out.C.dimmed(`${count} ${unit}`)}`);
+  await out.flush();
 }
 
 // --- Collapsed Read/Search Summary ---

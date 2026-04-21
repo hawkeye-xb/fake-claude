@@ -1,17 +1,34 @@
-// ANSI terminal output primitives — zero buffering, direct to stdout
-
+// ANSI terminal output primitives — handles stdout backpressure correctly
 let silenced = false;
+let drainPromise: Promise<void> | null = null;
 
 export function silence(): void {
   silenced = true;
 }
 
 export function write(text: string): void {
-  if (!silenced) process.stdout.write(text);
+  if (!silenced) {
+    const canContinue = process.stdout.write(text);
+    // If write returned false, buffer is full - set up drain listener
+    if (!canContinue && !drainPromise) {
+      drainPromise = new Promise(resolve => {
+        process.stdout.once('drain', () => {
+          drainPromise = null;
+          resolve();
+        });
+      });
+    }
+  }
 }
 
 export function writeLine(text: string): void {
   write(text + '\n');
+}
+
+export async function flush(): Promise<void> {
+  if (drainPromise) {
+    await drainPromise;
+  }
 }
 
 export function newLine(): void {
