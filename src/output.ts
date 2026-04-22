@@ -39,6 +39,12 @@ export function clearLine(): void {
   write('\r\x1b[2K');
 }
 
+export function clearScreen(): void {
+  // Clear screen + scrollback buffer, then move cursor to top-left.
+  // \x1b[3J clears the scrollback in most terminal emulators (iTerm2, Terminal.app).
+  write('\x1b[2J\x1b[3J\x1b[H');
+}
+
 export function cursorUp(n: number): void {
   if (n > 0) write(`\x1b[${n}A`);
 }

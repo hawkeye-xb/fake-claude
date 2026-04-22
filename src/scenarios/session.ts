@@ -10,8 +10,11 @@ import { grepScenario, globScenario } from './searching.js';
 import { permissionScenario } from './permission.js';
 import { responseScenario } from './response.js';
 import * as renderer from '../renderer.js';
+import * as out from '../output.js';
 import { USER_PROMPTS } from '../data/messages.js';
 import { pick, sleepRange } from '../timing.js';
+
+const CLEAR_SCREEN_EVERY = 5; // restart session (clear scrollback) every N conversations
 
 // A "conversation pattern" is a sequence of scenario steps.
 // Each step is [scenarioFn, optional description].
@@ -75,8 +78,25 @@ function buildConversationPattern(): Step[] {
   return pick(patterns);
 }
 
+function printSessionStats(durationMs: number): void {
+  out.clearLine();
+  out.newLine();
+  const inputTokens = 20000 + Math.floor(Math.random() * 30000);
+  const outputTokens = 8000 + Math.floor(Math.random() * 15000);
+  renderer.sessionStats({
+    model: 'claude-sonnet-4-5-20250514',
+    inputTokens,
+    cacheReadTokens: inputTokens * 60 + Math.floor(Math.random() * 500000),
+    outputTokens,
+    cost: parseFloat((0.15 + Math.random() * 0.8).toFixed(2)),
+    durationMs,
+  });
+}
+
 export async function runSession(ctx: ScenarioContext): Promise<void> {
   const startTime = Date.now();
+  let conversationCount = 0;
+  let miniSessionStart = Date.now();
 
   try {
     // Main loop — keep cycling through conversation patterns
@@ -111,8 +131,22 @@ export async function runSession(ctx: ScenarioContext): Promise<void> {
         await sleepRange(500, 1500, ctx.signal);
       }
 
-      // Pause before next "conversation"
-      await sleepRange(2000, 4000, ctx.signal);
+      conversationCount++;
+
+      // Every N conversations: end the mini-session naturally, then restart
+      if (conversationCount % CLEAR_SCREEN_EVERY === 0) {
+        // Show session stats — looks like Claude session wrapping up
+        printSessionStats(Date.now() - miniSessionStart);
+        // Pause so it feels like the user is reading / about to re-run claude
+        await sleepRange(3000, 5000, ctx.signal);
+        // Clear screen + scrollback, then show fresh banner
+        out.clearScreen();
+        renderer.startupBanner();
+        miniSessionStart = Date.now();
+      } else {
+        // Normal pause before next conversation
+        await sleepRange(2000, 4000, ctx.signal);
+      }
     }
   } catch (err) {
     // AbortError is expected (Ctrl+C), swallow it to show stats
@@ -121,22 +155,6 @@ export async function runSession(ctx: ScenarioContext): Promise<void> {
     }
   }
 
-  // Always show session stats on exit
-  // Clear any leftover spinner line
-  const { clearLine, newLine } = await import('../output.js');
-  clearLine();
-  newLine();
-
-  const elapsed = Date.now() - startTime;
-  const inputTokens = 20000 + Math.floor(Math.random() * 30000);
-  const outputTokens = 8000 + Math.floor(Math.random() * 15000);
-
-  renderer.sessionStats({
-    model: 'claude-sonnet-4-5-20250514',
-    inputTokens,
-    cacheReadTokens: inputTokens * 60 + Math.floor(Math.random() * 500000),
-    outputTokens,
-    cost: parseFloat((0.15 + Math.random() * 0.8).toFixed(2)),
-    durationMs: elapsed,
-  });
+  // Show final session stats on exit
+  printSessionStats(Date.now() - startTime);
 }

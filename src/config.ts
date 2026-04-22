@@ -43,7 +43,7 @@ export function parseArgs(argv: string[]): FakeClaudeConfig | null {
         return null;
       case '--version':
       case '-v':
-        console.log('fake-claude 1.0.0');
+        console.log('fake-claude 1.0.1');
         return null;
       case '--speed':
       case '-s': {
